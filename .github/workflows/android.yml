@@ -65,8 +65,8 @@ jobs:
           echo "LADRIA_KEYSTORE_PATH=$RUNNER_TEMP/ladria-release.jks" >> "$GITHUB_ENV"
       - name: Build (una sola variante)
         env:
-          LADRIA_VERSION_NAME: ${{ inputs.version_name || '0.2.0' }}
-          LADRIA_VERSION_CODE: ${{ inputs.version_code || 2 }}
+          LADRIA_VERSION_NAME: ${{ inputs.version_name || '0.3.0' }}
+          LADRIA_VERSION_CODE: ${{ inputs.version_code || 3 }}
           LADRIA_STORE_PASSWORD: ${{ secrets.LADRIA_STORE_PASSWORD }}
           LADRIA_KEY_ALIAS: ${{ secrets.LADRIA_KEY_ALIAS }}
           LADRIA_KEY_PASSWORD: ${{ secrets.LADRIA_KEY_PASSWORD }}
@@ -86,7 +86,7 @@ jobs:
         if: inputs.canal == 'test' || github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: LadrIA-test-${{ inputs.version_name || '0.2.0' }}
+          name: LadrIA-test-${{ inputs.version_name || '0.3.0' }}
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
       - name: Publicar release oficial (requiere firma permanente)
