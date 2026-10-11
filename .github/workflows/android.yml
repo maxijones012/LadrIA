@@ -36,9 +36,15 @@ jobs:
       # intenta instalar el paquete eliminado 'tools' y falla en 2026.
       - name: Preparar SDK Android
         run: |
+          set -euo pipefail
           echo "ANDROID_HOME=$ANDROID_HOME"
-          sdkmanager --version
-          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+          if [ -d "$ANDROID_HOME/platforms/android-35" ] && [ -d "$ANDROID_HOME/build-tools/35.0.0" ]; then
+            echo "Android 35 y build-tools 35 ya están instalados"
+          else
+            SDKMANAGER="$(find "$ANDROID_HOME/cmdline-tools" -name sdkmanager -type f | head -1)"
+            test -n "$SDKMANAGER" || { echo "No se halló sdkmanager en cmdline-tools"; exit 1; }
+            "$SDKMANAGER" 'platforms;android-35' 'build-tools;35.0.0'
+          fi
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
