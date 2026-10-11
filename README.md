@@ -21,6 +21,14 @@ Repositorio oficial: https://github.com/maxijones012/LadrIA
 - No se usa la unidad real de LadrIA; la validación SSV de AdMob está configurada en consola, pero el circuito de usuarios/SSV/billetera sigue pendiente.
 - Pueden existir errores de compilación o diferencias en SDK que deban detectarse en el próximo único build manual; aún no se compiló esta modificación.
 
+## v0.3.0 — última compilación de prueba
+
+- Compilación confirmada por GitHub Actions: https://github.com/maxijones012/LadrIA/actions/runs/38168414959
+- Detector consulta todas las clases YAMNet, incluye ladridos agudos, sensibilidad Normal/Sensible, momentos acústicos por segundo y 12 cuadros de video.
+- APK debug generado como artefacto. **No es una release firmada con certificado estable**: es posible que no actualice sobre APK de prueba anterior; si Android indica firma incompatible, hacer copia de lo necesario y reinstalar.
+- Los medios se analizan en el dispositivo; análisis canino contextual y posturas aún no implementados. Créditos productivos y anuncios reales desactivados.
+- GitHub Actions vuelve a ejecutarse **solo a demanda** mediante workflow_dispatch.
+
 ## Proyectado, todavía NO operativo
 
 - **Registro AdMob recibido**: App ID `ca-app-pub-3368082820065806~7527535526` y unidad recompensada `ca-app-pub-3368082820065806/3913839553`. Se agregaron metadatos Android y dependencias Next-Gen/UMP, **sin inicializar ni mostrar anuncios** hasta implementar consentimiento, identidad de usuario y SSV, y verificar el importe/item del premio. Recompensas por publicidad **AdMob GMA Next-Gen** y billetera de créditos (requieren cuenta, consentimiento UMP, backend y verificación SSV de cada recompensa). **Regla propuesta 80/20 de unidades virtuales**: de cada 5 unidades de presupuesto, 4 créditos para la persona y 1 no emitida como reserva del proyecto. **NO** es un reparto en dinero de los ingresos publicitarios. Por ahora, los análisis beta no cobran créditos ni muestran anuncios reales. Detalle: [`docs/RECOMPENSAS-80-20.md`](docs/RECOMPENSAS-80-20.md).

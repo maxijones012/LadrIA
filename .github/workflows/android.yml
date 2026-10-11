@@ -1,10 +1,6 @@
 name: Compilar LadrIA APK (manual)
 on:
-  # Una única compilación al introducir o modificar ESTE workflow.
-  # Los cambios de código comunes NO disparan más Actions.
-  push:
-    branches: [main]
-    paths: ['.github/workflows/android.yml']
+  # Solo compilación manual para conservar minutos de GitHub Actions.
   workflow_dispatch:
     inputs:
       canal:
