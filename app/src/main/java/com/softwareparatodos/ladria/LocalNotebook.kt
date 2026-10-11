@@ -46,10 +46,14 @@ object LocalNotebook {
     } catch (_: Exception) { emptyList() }
 
     @Synchronized
-    fun add(ctx: Context, name: String, situation: String, posture: String, report: VideoReport): List<SavedObservation> {
+    fun add(ctx: Context, name: String, situation: String, posture: String, report: VideoReport, tone: TranslationTone = TranslationTone.TIERNO): List<SavedObservation> {
         val assessment = ObservationGuide.build(
             report.dogFrames > 0, report.sounds.map { it.label }, situation, posture)
-        val evidence = assessment + "\nCuadros revisados: " + report.framesChecked +
+        val voice = DogTalk.imagine(report.sounds, situation, posture, tone)?.let {
+            "\\nVoz imaginaria (ficción, no traducción): “" + it.phrase + "”" +
+                "\\n" + it.caution
+        } ?: ""
+        val evidence = assessment + voice + "\\nCuadros revisados: " + report.framesChecked +
             ". Segundos de audio: " + report.audioSecondsInspected + "." +
             (if (report.audioError != null) "\nAudio: " + report.audioError.take(80) else "") +
             (if (report.visualError != null) "\nImagen: " + report.visualError.take(80) else "")

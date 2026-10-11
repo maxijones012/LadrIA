@@ -79,6 +79,7 @@ class MainActivity : ComponentActivity() {
     private var observationHistory by mutableStateOf<List<SavedObservation>>(emptyList())
     private var contextChoice by mutableStateOf("Sin contexto")
     private var postureChoice by mutableStateOf("No observada")
+    private var translationTone by mutableStateOf(TranslationTone.TIERNO)
     private var pendingVideo: android.net.Uri? = null
     private var pendingCameraFile: File? = null
     private var updateMessage by mutableStateOf("Releases oficiales desde GitHub. La instalación requiere tu autorización.")
@@ -120,6 +121,8 @@ class MainActivity : ComponentActivity() {
                 onDeleteDog = { dog -> savedDogs = LocalNotebook.deleteDog(this, dog); if (lastDogName == dog) lastDogName = "" },
                 contextChoice = contextChoice,
                 postureChoice = postureChoice,
+                translationTone = translationTone,
+                onTranslationTone = { translationTone = it },
                 onContextChoice = { contextChoice = it },
                 onPostureChoice = { postureChoice = it },
                 observationHistory = observationHistory,
@@ -184,10 +187,11 @@ class MainActivity : ComponentActivity() {
         val selectedName = lastDogName
         val selectedContext = contextChoice
         val selectedPosture = postureChoice
+        val selectedTone = translationTone
         worker.execute {
             try {
                 val report = VideoEngine.analyze(this, uri, sensitivity)
-                val records = LocalNotebook.add(this, selectedName, selectedContext, selectedPosture, report)
+                val records = LocalNotebook.add(this, selectedName, selectedContext, selectedPosture, report, selectedTone)
                 runOnUiThread {
                     observationHistory = records
                     videoReport = report
@@ -306,6 +310,8 @@ private fun LadriaScreen(
     onDeleteDog: (String) -> Unit,
     contextChoice: String,
     postureChoice: String,
+    translationTone: TranslationTone,
+    onTranslationTone: (TranslationTone) -> Unit,
     onContextChoice: (String) -> Unit,
     onPostureChoice: (String) -> Unit,
     observationHistory: List<SavedObservation>,
@@ -415,6 +421,22 @@ private fun LadriaScreen(
                             ObservationSelector("Situación", ObservationGuide.situations, contextChoice, onContextChoice)
                             ObservationSelector("Postura", ObservationGuide.postures, postureChoice, onPostureChoice)
                         }
+                        SectionCard("🐶 SI PUDIERA HABLAR…") {
+                            Text("Imaginamos una frase amable basada en el sonido. No es traducción literal.",color=Soft,fontSize=13.sp)
+                            Row(horizontalArrangement=Arrangement.spacedBy(5.dp)) {
+                                TranslationTone.entries.forEach { tone ->
+                                    OutlinedButton(
+                                        onClick={ onTranslationTone(tone) },
+                                        modifier=Modifier.weight(1f),
+                                        border=BorderStroke(1.dp, if(translationTone==tone) Cyan else Soft.copy(alpha=.25f)),
+                                        contentPadding=androidx.compose.foundation.layout.PaddingValues(horizontal=3.dp,vertical=2.dp)
+                                    ) {
+                                        Text(tone.title,color=if(translationTone==tone) Cyan else Soft,fontSize=11.sp)
+                                    }
+                                }
+                            }
+                            Text("Elegí un tono, y escuchá o importá un video.",color=Soft,fontSize=12.sp)
+                        }
                         SectionCard("01 · ESCUCHA EN VIVO") {
                             Text("Reconocimiento de eventos acústicos", color = Color.White, fontWeight = FontWeight.Medium)
                             Text("Ladridos, ladridos agudos, aullidos, gruñidos y gemidos. El detector puede equivocarse.", color = Soft, fontSize = 13.sp)
@@ -454,6 +476,16 @@ private fun LadriaScreen(
                                 Text("● Micrófono activo", color = Cyan, fontSize = 12.sp)
                                 SoundResults(audio, isListening = true)
                             }
+                            if (active || history.isNotEmpty()) {
+                                DogTalkCard(
+                                    findings = if (audio.isNotEmpty()) audio
+                                        else history.lastOrNull()?.let { listOf(it.finding) } ?: emptyList(),
+                                    context = contextChoice,
+                                    posture = postureChoice,
+                                    tone = translationTone,
+                                    dogName = dogName
+                                )
+                            }
                             if (history.isNotEmpty()) {
                                 Text("SEÑALES RECIENTES", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                                 history.takeLast(6).asReversed().forEach { moment ->
@@ -476,6 +508,7 @@ private fun LadriaScreen(
                                 modifier = Modifier.fillMaxWidth()
                             ) { Text("📷  Grabar con la cámara", color = Color(0xFFBCAFFF)) }
                             if (report != null) {
+                                DogTalkCard(report.sounds, contextChoice, postureChoice, translationTone, dogName)
                                 VideoResults(report)
                                 SectionCard("LECTURA ORIENTATIVA") {
                                     Text(
@@ -601,6 +634,44 @@ private fun SectionCard(title: String, body: @Composable () -> Unit) {
         Column(modifier = Modifier.padding(17.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(title, color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.4.sp)
             body()
+        }
+    }
+}
+
+@Composable
+private fun DogTalkCard(
+    findings: List<SoundFinding>,
+    context: String,
+    posture: String,
+    tone: TranslationTone,
+    dogName: String
+) {
+    val candidate = DogTalk.imagine(findings, context, posture, tone)
+    Box(
+        modifier = Modifier.fillMaxWidth()
+            .background(
+                Brush.linearGradient(listOf(Color(0xFF153B48),Color(0xFF232546))),
+                RoundedCornerShape(19.dp)
+            )
+            .border(1.dp, Violet.copy(alpha=.55f), RoundedCornerShape(19.dp))
+            .padding(17.dp)
+    ) {
+        Column(verticalArrangement=Arrangement.spacedBy(8.dp)) {
+            Text("🐾 SI PUDIERA HABLAR...",color=Cyan,fontSize=11.sp,fontWeight=FontWeight.Bold)
+            if (candidate == null) {
+                Text("Todavía no escuché una vocalización clara como para imaginar una frase.",
+                    color=Color.White,fontSize=14.sp)
+                Text("Probá el modo Sensible si los sonidos son suaves.", color=Soft,fontSize=12.sp)
+            } else {
+                val heading = dogName.trim().take(40).ifBlank { "Tu perro" }
+                Text(heading + " podría decir:",color=Soft,fontSize=12.sp)
+                Text("“" + candidate.phrase + "”",color=Color.White,fontWeight=FontWeight.SemiBold,
+                    fontSize=21.sp,lineHeight=27.sp)
+                Text(candidate.evidence,color=Color(0xFFABD5E7),fontSize=12.sp)
+                Text(candidate.caution,color=Soft,fontSize=11.sp)
+            }
+            Text("Interpretación creativa y orientativa · No traduce literalmente ladridos.",
+                color=Cyan.copy(alpha=.9f),fontSize=11.sp)
         }
     }
 }

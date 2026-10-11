@@ -22,6 +22,14 @@ Repositorio oficial: https://github.com/maxijones012/LadrIA
 - Pueden existir errores de compilación o diferencias en SDK que deban detectarse en el próximo único build manual; aún no se compiló esta modificación.
 
 
+## v0.5.0 — «Si pudiera hablar…» (interpretación simpática)
+- Frases amigables **creativas** a partir del tipo de sonido detectado y el contexto aportado por la persona; aparecen durante la escucha y junto al video.
+- Estilos Tierno / Divertido / Tranquilo, con un mensaje de incertidumbre visible en pantalla.
+- Sin sonido distinguible o con etiqueta genérica `Dog`: no inventar frases. Con gruñidos o gemidos, indicar precauciones apropiadas.
+- No utiliza IA generativa remota: YAMNet clasifica sonidos y reglas locales construyen frases. Esto mantiene privacidad, uso offline y cero créditos.
+- Los registros de video guardan la frase como texto etiquetado de ficción; se conservan las advertencias.
+- Nuevas pruebas unitarias sobre ausencia de sonido, tono/contexto, gruñidos y gemidos.
+
 ## v0.4.0 — cuaderno y contexto
 - Perfiles locales por nombre y selector.
 - Contexto y observaciones corporales manuales, diferenciadas explícitamente de las señales que detecta YAMNet/ML Kit.
