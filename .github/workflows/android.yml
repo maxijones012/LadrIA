@@ -1,5 +1,10 @@
 name: Compilar LadrIA APK (manual)
 on:
+  # Una única compilación al introducir o modificar ESTE workflow.
+  # Los cambios de código comunes NO disparan más Actions.
+  push:
+    branches: [main]
+    paths: ['.github/workflows/android.yml']
   workflow_dispatch:
     inputs:
       canal:
@@ -50,13 +55,13 @@ jobs:
           echo "LADRIA_KEYSTORE_PATH=$RUNNER_TEMP/ladria-release.jks" >> "$GITHUB_ENV"
       - name: Build (una sola variante)
         env:
-          LADRIA_VERSION_NAME: ${{ inputs.version_name }}
-          LADRIA_VERSION_CODE: ${{ inputs.version_code }}
+          LADRIA_VERSION_NAME: ${{ inputs.version_name || '0.2.0' }}
+          LADRIA_VERSION_CODE: ${{ inputs.version_code || 2 }}
           LADRIA_STORE_PASSWORD: ${{ secrets.LADRIA_STORE_PASSWORD }}
           LADRIA_KEY_ALIAS: ${{ secrets.LADRIA_KEY_ALIAS }}
           LADRIA_KEY_PASSWORD: ${{ secrets.LADRIA_KEY_PASSWORD }}
         run: |
-          if [ '${{ inputs.canal }}' = release ]; then
+          if [ '${{ inputs.canal || 'test' }}' = release ]; then
             gradle --no-daemon :app:assembleRelease
           else
             gradle --no-daemon :app:assembleDebug
@@ -68,10 +73,10 @@ jobs:
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --print-certs app/build/outputs/apk/release/app-release.apk
           sha256sum app/build/outputs/apk/release/app-release.apk > app/build/outputs/apk/release/SHA256SUMS.txt
       - name: Artefacto de pruebas (NO sirve para actualizar)
-        if: inputs.canal == 'test'
+        if: inputs.canal == 'test' || github.event_name == 'push'
         uses: actions/upload-artifact@v4
         with:
-          name: LadrIA-test-${{ inputs.version_name }}
+          name: LadrIA-test-${{ inputs.version_name || '0.2.0' }}
           path: app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
       - name: Publicar release oficial (requiere firma permanente)
