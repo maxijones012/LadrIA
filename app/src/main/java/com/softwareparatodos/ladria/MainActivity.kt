@@ -333,7 +333,8 @@ private fun LadriaScreen(
                             Text("Anuncios recompensados, sin falsas recompensas", color=Color.White, fontSize=17.sp, fontWeight=FontWeight.SemiBold)
                             Text("Durante la beta inicial los análisis son gratuitos. No se muestra saldo ficticio ni anuncios de producción.", color=Soft, fontSize=13.sp)
                             HorizontalDivider(color=Cyan.copy(alpha=.15f))
-                            Text("Propuesta futura: audio 1 crédito · video 3 créditos · anuncio voluntario +3 créditos.", color=Cyan, fontSize=13.sp)
+                            Text("Ejemplo 80/20 futuro: audio 1 crédito · video 3 créditos · anuncio voluntario +${RewardSplit.previewUserCredits} créditos.", color=Cyan, fontSize=13.sp)
+                            Text("De 5 unidades virtuales: ${RewardSplit.previewUserCredits} para usar en análisis (80%) y ${RewardSplit.previewReserveUnits} no emitida (20%). No es dinero ni reparto de ingresos de AdMob.", color=Soft, fontSize=12.sp)
                             Text("Solo se acreditará una recompensa cuando la verifique el servidor de AdMob. Mantendremos un acceso básico sin anuncios.", color=Soft, fontSize=12.sp)
                         }
                     }

@@ -55,10 +55,25 @@ App Android de análisis experimental de vocalizaciones y señales visuales cani
 
 - 3 créditos gratuitos por día de calendario del servidor, para el cliente oficial, sujeto a control antiabuso.
 - Audio rápido: 1 crédito; video de hasta 30 segundos: 3 créditos. **Nada se descuenta si el análisis falla o se cancela antes de comenzar**.
-- Video recompensado voluntario: +3 créditos si se confirma por SSV. Limitar tasa, abuso y anuncios por usuario.
+- Video recompensado voluntario: **4 créditos de uso** en el ejemplo inicial de 5 unidades virtuales de recompensa (80% usuario, 20% reserva no emitida del proyecto), acreditados únicamente tras SSV verificada. Limitar tasa, abuso y anuncios por usuario. No equivale a distribuir dinero ni garantiza una rentabilidad del 20%.
 - Sin transferencias, conversiones a dinero o redención fuera de la app. Sin compras por ahora.
 - Para quienes no quieran anuncios: mantener al menos funciones básicas gratuitas de prueba; nunca ad blocking obligatorio.
 - Los valores son un punto de partida de producto, no una obligación contractual; quedan remotos/configurables mediante servidor.
+
+
+## Regla 80/20 de recompensas virtuales (nueva decisión)
+
+- El 80/20 se aplica **exclusivamente a unidades virtuales de recompensa presupuestadas por la app**, NO a la facturación real de AdMob. El titular de la cuenta AdMob recibe las liquidaciones publicitarias conforme a su contrato y debe afrontar gastos e impuestos.
+- Configuración de ejemplo: bolsa de **5 unidades virtuales** por anuncio verificado; **4 créditos** (80%) acreditados a la persona para escaneos; **1 unidad** (20%) **no se emite** y queda como reserva de diseño del programa. No constituye una moneda, una transferencia al dueño, una ganancia contable ni un saldo que alguien pueda retirar.
+- Todo crédito otorgado es de **uso exclusivo dentro de LadrIA**, no transferible, sin valor de rescate y jamás convertible en dinero, tarjetas de regalo, criptoactivos o bienes externos. Está prohibido anunciar «cobrás el 80%» por ver publicidad.
+- Los valores concretos deben definirse en **configuración firmada/servida por backend** (porcentaje usuario 80, reserva 20; total unidades 5), versionada y auditada. La app solo muestra una vista preliminar hasta que exista backend verificado.
+- Para una bolsa que no permita partición entera, no hacer cálculos en el cliente ni redondear de manera oculta. Usar paquetes preaprobados en el servidor con cantidades enteras, y comunicar antes del anuncio cuántos créditos exactos se reciben.
+- Si una persona completa un anuncio recompensado, se registra la transacción SSV válida una sola vez, se acreditan los créditos prometidos y se deja una traza de la política aplicada; no se usa la cifra de ingresos de AdMob como una contraparte monetaria de esos créditos.
+- La reserva de 20% **no se acredita a una cuenta personal en LadrIA**, porque no representa dinero. Las métricas de ingresos reales son independientes de los puntos virtuales y se consultan en AdMob, nunca en la billetera de usuarios.
+- Los análisis básicos siguen siendo gratuitos sin mirar anuncios en la fase beta. Nunca exigir clics en anuncios, ni recompensar por clics, ni modificar saldos desde el APK o SharedPreferences.
+- Antes de producción: consentimiento UMP si corresponde, SSV validada criptográficamente, transacciones idempotentes, límites razonables, criterios antiabuso, transparencia del costo de cada análisis y pruebas de reembolso.
+
+Detalle implementativo: [RECOMPENSAS-80-20.md](RECOMPENSAS-80-20.md).
 
 ## Seguridad del ledger
 

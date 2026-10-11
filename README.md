@@ -16,7 +16,7 @@ Repositorio oficial: https://github.com/maxijones012/LadrIA
 
 ## Proyectado, todavía NO operativo
 
-- Recompensas por publicidad **AdMob GMA Next-Gen** y billetera de créditos (requieren cuenta, consentimiento UMP, backend y verificación SSV de cada recompensa). Por ahora, los análisis beta no cobran créditos ni muestran anuncios reales.
+- Recompensas por publicidad **AdMob GMA Next-Gen** y billetera de créditos (requieren cuenta, consentimiento UMP, backend y verificación SSV de cada recompensa). **Regla propuesta 80/20 de unidades virtuales**: de cada 5 unidades de presupuesto, 4 créditos para la persona y 1 no emitida como reserva del proyecto. **NO** es un reparto en dinero de los ingresos publicitarios. Por ahora, los análisis beta no cobran créditos ni muestran anuncios reales. Detalle: [`docs/RECOMPENSAS-80-20.md`](docs/RECOMPENSAS-80-20.md).
 - Interpretación contextual, reconocimiento de postura corporal, entrenamiento propio multimodal, perfiles persistentes e historial.
 - Instalación del APK sin salir del flujo de Android: la app busca releases; **Android solicita instalación** y exige misma firma para actualizar sin desinstalar.
 
