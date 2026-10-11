@@ -76,10 +76,18 @@ class MainActivity : ComponentActivity() {
     private var updateMessage by mutableStateOf("Releases oficiales desde GitHub. La instalación requiere tu autorización.")
     private var availableUpdate: AppUpdate? by mutableStateOf(null)
     private var checkingUpdate by mutableStateOf(false)
+    private var adTestStatus by mutableStateOf("Podés probar un video de Google. No se acreditan créditos.")
+    private var adTestBusy by mutableStateOf(false)
+    private var rewardedTestController: RewardedTestController? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         analyzeCaptured = { uri -> processVideo(uri) }
+        rewardedTestController = RewardedTestController(
+            activity = this,
+            updateStatus = { adTestStatus = it },
+            updateBusy = { adTestBusy = it }
+        ).also { it.refreshConsentAtLaunch() }
         setContent {
             LadriaScreen(
                 active = isActive,
@@ -92,6 +100,9 @@ class MainActivity : ComponentActivity() {
                 onToggleMic = { if (isActive) stopMic() else requestAndStartMic() },
                 onRecordVideo = { recordWithCamera() },
                 onSelectedVideo = { uri -> if (uri != null) processVideo(uri) },
+                adTestStatus = adTestStatus,
+                adTestBusy = adTestBusy,
+                onTestRewarded = { rewardedTestController?.watchTestAd() },
                 checkingUpdate = checkingUpdate,
                 updateMessage = updateMessage,
                 updateAvailable = availableUpdate != null,
@@ -207,6 +218,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         stopMic()
+        rewardedTestController?.close()
         worker.shutdownNow()
         super.onDestroy()
     }
@@ -224,6 +236,9 @@ private fun LadriaScreen(
     onToggleMic: () -> Unit,
     onRecordVideo: () -> Unit,
     onSelectedVideo: (android.net.Uri?) -> Unit,
+    adTestStatus: String,
+    adTestBusy: Boolean,
+    onTestRewarded: () -> Unit,
     checkingUpdate: Boolean,
     updateMessage: String,
     updateAvailable: Boolean,
@@ -336,6 +351,16 @@ private fun LadriaScreen(
                             Text("Ejemplo 80/20 futuro: audio 1 crédito · video 3 créditos · anuncio voluntario +${RewardSplit.previewUserCredits} créditos.", color=Cyan, fontSize=13.sp)
                             Text("De 5 unidades virtuales: ${RewardSplit.previewUserCredits} para usar en análisis (80%) y ${RewardSplit.previewReserveUnits} no emitida (20%). No es dinero ni reparto de ingresos de AdMob.", color=Soft, fontSize=12.sp)
                             Text("AdMob registrado para LadrIA. Publicidad de producción todavía desactivada; usaremos anuncios de prueba y confirmación del servidor antes de acreditar créditos.", color=Soft, fontSize=12.sp)
+                            Spacer(Modifier.height(6.dp))
+                            Button(
+                                onClick = onTestRewarded,
+                                enabled = !adTestBusy,
+                                modifier = Modifier.fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(containerColor = Violet)
+                            ) {
+                                Text(if (adTestBusy) "Preparando prueba..." else "▶ Ver anuncio de prueba (0 créditos)", color = Color.White)
+                            }
+                            Text(adTestStatus, color=Soft, fontSize=12.sp)
                         }
                     }
                     else -> {

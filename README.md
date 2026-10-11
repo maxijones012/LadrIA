@@ -14,6 +14,13 @@ Repositorio oficial: https://github.com/maxijones012/LadrIA
 - Workflow **manual** de GitHub Actions con modos `test` (APK debug) y `release` (APK firmado con clave estable + publicación). Sin compilación automática por commits.
 - Se informa cuando la evidencia es insuficiente. Nada se envía al servidor para su análisis.
 
+## Preparación de anuncios de prueba (código agregado, sin APK validado)
+
+- `RewardedTestController.kt` pide información de privacidad a UMP, muestra su formulario cuando hace falta e inicializa GMA Next-Gen fuera del hilo principal.
+- El botón en **Créditos** solicita exclusivamente la unidad de **prueba oficial de Google** y no acredita ningún saldo, ni siquiera si el anuncio informa recompensa.
+- No se usa la unidad real de LadrIA; la validación SSV de AdMob está configurada en consola, pero el circuito de usuarios/SSV/billetera sigue pendiente.
+- Pueden existir errores de compilación o diferencias en SDK que deban detectarse en el próximo único build manual; aún no se compiló esta modificación.
+
 ## Proyectado, todavía NO operativo
 
 - **Registro AdMob recibido**: App ID `ca-app-pub-3368082820065806~7527535526` y unidad recompensada `ca-app-pub-3368082820065806/3913839553`. Se agregaron metadatos Android y dependencias Next-Gen/UMP, **sin inicializar ni mostrar anuncios** hasta implementar consentimiento, identidad de usuario y SSV, y verificar el importe/item del premio. Recompensas por publicidad **AdMob GMA Next-Gen** y billetera de créditos (requieren cuenta, consentimiento UMP, backend y verificación SSV de cada recompensa). **Regla propuesta 80/20 de unidades virtuales**: de cada 5 unidades de presupuesto, 4 créditos para la persona y 1 no emitida como reserva del proyecto. **NO** es un reparto en dinero de los ingresos publicitarios. Por ahora, los análisis beta no cobran créditos ni muestran anuncios reales. Detalle: [`docs/RECOMPENSAS-80-20.md`](docs/RECOMPENSAS-80-20.md).
