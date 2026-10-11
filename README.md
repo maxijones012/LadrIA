@@ -16,7 +16,7 @@ Repositorio oficial: https://github.com/maxijones012/LadrIA
 
 ## Proyectado, todavía NO operativo
 
-- Recompensas por publicidad **AdMob GMA Next-Gen** y billetera de créditos (requieren cuenta, consentimiento UMP, backend y verificación SSV de cada recompensa). **Regla propuesta 80/20 de unidades virtuales**: de cada 5 unidades de presupuesto, 4 créditos para la persona y 1 no emitida como reserva del proyecto. **NO** es un reparto en dinero de los ingresos publicitarios. Por ahora, los análisis beta no cobran créditos ni muestran anuncios reales. Detalle: [`docs/RECOMPENSAS-80-20.md`](docs/RECOMPENSAS-80-20.md).
+- **Registro AdMob recibido**: App ID `ca-app-pub-3368082820065806~7527535526` y unidad recompensada `ca-app-pub-3368082820065806/3913839553`. Se agregaron metadatos Android y dependencias Next-Gen/UMP, **sin inicializar ni mostrar anuncios** hasta implementar consentimiento, identidad de usuario y SSV, y verificar el importe/item del premio. Recompensas por publicidad **AdMob GMA Next-Gen** y billetera de créditos (requieren cuenta, consentimiento UMP, backend y verificación SSV de cada recompensa). **Regla propuesta 80/20 de unidades virtuales**: de cada 5 unidades de presupuesto, 4 créditos para la persona y 1 no emitida como reserva del proyecto. **NO** es un reparto en dinero de los ingresos publicitarios. Por ahora, los análisis beta no cobran créditos ni muestran anuncios reales. Detalle: [`docs/RECOMPENSAS-80-20.md`](docs/RECOMPENSAS-80-20.md).
 - Interpretación contextual, reconocimiento de postura corporal, entrenamiento propio multimodal, perfiles persistentes e historial.
 - Instalación del APK sin salir del flujo de Android: la app busca releases; **Android solicita instalación** y exige misma firma para actualizar sin desinstalar.
 
@@ -34,5 +34,5 @@ Requisitos locales: JDK 17, Android SDK 35, Gradle 8.10.2. Ejecutar `python3 scr
 
 - **El código es MIT**, pero los modelos y SDKs tienen licencias y condiciones propias. Antes de publicar una versión comercial, completar el inventario de dependencias y permisos de redistribución. Evitar el dataset emocional NC de Barkopedia salvo autorización.
 - La búsqueda de versiones necesita `INTERNET`; la futura publicidad y backend también. Eso NO significa que subamos audio o video. No se graba en segundo plano.
-- El estado actual es **código de prototipo sin APK compilado ni pruebas en Android verificadas en esta sesión**. No hay cuenta AdMob, créditos productivos ni backend conectado.
+- El estado actual es **código de prototipo sin APK compilado ni pruebas en Android verificadas en esta sesión**. La cuenta AdMob está registrada y el backend tiene funciones iniciales, pero **no se muestran anuncios reales ni se han probado créditos productivos o el circuito completo**.
 - El score de YAMNet indica resultado de clasificación acústica, no seguridad, emoción, estado médico o probabilidad de una traducción.

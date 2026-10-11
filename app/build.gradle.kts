@@ -56,5 +56,9 @@ dependencies {
     implementation("androidx.core:core-ktx:1.16.0")
     implementation("org.tensorflow:tensorflow-lite-task-audio:0.4.4")
     implementation("com.google.mlkit:image-labeling:17.0.9")
+    // Google Mobile Ads Next-Gen SDK + consentimiento UMP.
+    // No pedir anuncios reales hasta completar identidad, sesión SSV y pruebas.
+    implementation("com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0")
+    implementation("com.google.android.ump:user-messaging-platform:4.0.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }

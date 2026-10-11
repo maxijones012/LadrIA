@@ -335,7 +335,7 @@ private fun LadriaScreen(
                             HorizontalDivider(color=Cyan.copy(alpha=.15f))
                             Text("Ejemplo 80/20 futuro: audio 1 crédito · video 3 créditos · anuncio voluntario +${RewardSplit.previewUserCredits} créditos.", color=Cyan, fontSize=13.sp)
                             Text("De 5 unidades virtuales: ${RewardSplit.previewUserCredits} para usar en análisis (80%) y ${RewardSplit.previewReserveUnits} no emitida (20%). No es dinero ni reparto de ingresos de AdMob.", color=Soft, fontSize=12.sp)
-                            Text("Solo se acreditará una recompensa cuando la verifique el servidor de AdMob. Mantendremos un acceso básico sin anuncios.", color=Soft, fontSize=12.sp)
+                            Text("AdMob registrado para LadrIA. Publicidad de producción todavía desactivada; usaremos anuncios de prueba y confirmación del servidor antes de acreditar créditos.", color=Soft, fontSize=12.sp)
                         }
                     }
                     else -> {
