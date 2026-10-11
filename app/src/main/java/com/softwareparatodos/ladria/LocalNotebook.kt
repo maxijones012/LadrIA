@@ -50,10 +50,10 @@ object LocalNotebook {
         val assessment = ObservationGuide.build(
             report.dogFrames > 0, report.sounds.map { it.label }, situation, posture)
         val voice = DogTalk.imagine(report.sounds, situation, posture, tone)?.let {
-            "\\nVoz imaginaria (ficción, no traducción): “" + it.phrase + "”" +
-                "\\n" + it.caution
+            "\nVoz imaginaria (ficción, no traducción): “" + it.phrase + "”" +
+                "\n" + it.caution
         } ?: ""
-        val evidence = assessment + voice + "\\nCuadros revisados: " + report.framesChecked +
+        val evidence = assessment + voice + "\nCuadros revisados: " + report.framesChecked +
             ". Segundos de audio: " + report.audioSecondsInspected + "." +
             (if (report.audioError != null) "\nAudio: " + report.audioError.take(80) else "") +
             (if (report.visualError != null) "\nImagen: " + report.visualError.take(80) else "")
