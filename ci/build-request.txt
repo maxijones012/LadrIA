@@ -1,2 +1,2 @@
-LadrIA v0.4.0 - compilación de integración solicitada el 2026-10-11.
-Incluye :app:testDebugUnitTest y :app:assembleDebug. El workflow se activa únicamente al cambiar este archivo.
+LadrIA 0.5.0 — APK de prueba con voz imaginaria canina, tonos, historial y pruebas unitarias.
+Una única compilación por cambio de solicitud.
