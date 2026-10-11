@@ -75,6 +75,10 @@ class MainActivity : ComponentActivity() {
     private var videoReport by mutableStateOf<VideoReport?>(null)
     private var message by mutableStateOf("Grabá o importá un video. El análisis se realiza en tu teléfono.")
     private var lastDogName by mutableStateOf("")
+    private var savedDogs by mutableStateOf<List<String>>(emptyList())
+    private var observationHistory by mutableStateOf<List<SavedObservation>>(emptyList())
+    private var contextChoice by mutableStateOf("Sin contexto")
+    private var postureChoice by mutableStateOf("No observada")
     private var pendingVideo: android.net.Uri? = null
     private var updateMessage by mutableStateOf("Releases oficiales desde GitHub. La instalación requiere tu autorización.")
     private var availableUpdate: AppUpdate? by mutableStateOf(null)
@@ -86,6 +90,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         analyzeCaptured = { uri -> processVideo(uri) }
+        savedDogs = LocalNotebook.dogs(this)
+        observationHistory = LocalNotebook.records(this)
         rewardedTestController = RewardedTestController(
             activity = this,
             updateStatus = { adTestStatus = it },
@@ -107,6 +113,23 @@ class MainActivity : ComponentActivity() {
                 message = message,
                 dogName = lastDogName,
                 onDogName = { lastDogName = it },
+                savedDogs = savedDogs,
+                onSaveDog = { savedDogs = LocalNotebook.saveDog(this, lastDogName) },
+                onPickDog = { lastDogName = it },
+                onDeleteDog = { dog -> savedDogs = LocalNotebook.deleteDog(this, dog); if (lastDogName == dog) lastDogName = "" },
+                contextChoice = contextChoice,
+                postureChoice = postureChoice,
+                onContextChoice = { contextChoice = it },
+                onPostureChoice = { postureChoice = it },
+                observationHistory = observationHistory,
+                onClearHistory = { observationHistory = LocalNotebook.clear(this) },
+                onShareObservation = { entry ->
+                    val intent = Intent(Intent.ACTION_SEND).apply {
+                        type = "text/plain"
+                        putExtra(Intent.EXTRA_TEXT, LocalNotebook.shareText(entry))
+                    }
+                    startActivity(Intent.createChooser(intent, "Compartir registro LadrIA"))
+                },
                 onToggleMic = { if (isActive) stopMic() else requestAndStartMic() },
                 onRecordVideo = { recordWithCamera() },
                 onSelectedVideo = { uri -> if (uri != null) processVideo(uri) },
@@ -152,10 +175,15 @@ class MainActivity : ComponentActivity() {
         isBusy = true
         videoReport = null
         message = "Analizando cuadros y audio. Esto puede demorar unos segundos..."
+        val selectedName = lastDogName
+        val selectedContext = contextChoice
+        val selectedPosture = postureChoice
         worker.execute {
             try {
                 val report = VideoEngine.analyze(this, uri, sensitivity)
+                val records = LocalNotebook.add(this, selectedName, selectedContext, selectedPosture, report)
                 runOnUiThread {
+                    observationHistory = records
                     videoReport = report
                     message = "Análisis finalizado. Interpretá los resultados junto al contexto."
                     isBusy = false
@@ -261,6 +289,17 @@ private fun LadriaScreen(
     message: String,
     dogName: String,
     onDogName: (String) -> Unit,
+    savedDogs: List<String>,
+    onSaveDog: () -> Unit,
+    onPickDog: (String) -> Unit,
+    onDeleteDog: (String) -> Unit,
+    contextChoice: String,
+    postureChoice: String,
+    onContextChoice: (String) -> Unit,
+    onPostureChoice: (String) -> Unit,
+    observationHistory: List<SavedObservation>,
+    onClearHistory: () -> Unit,
+    onShareObservation: (SavedObservation) -> Unit,
     onToggleMic: () -> Unit,
     onRecordVideo: () -> Unit,
     onSelectedVideo: (android.net.Uri?) -> Unit,
@@ -277,6 +316,16 @@ private fun LadriaScreen(
         onSelectedVideo(it)
     }
     var selectedTab by remember { mutableIntStateOf(0) }
+    var confirmDeleteHistory by remember { mutableStateOf(false) }
+    if (confirmDeleteHistory) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { confirmDeleteHistory = false },
+            title = { Text("¿Borrar historial?") },
+            text = { Text("Se eliminarán todos los análisis guardados en este teléfono. No se puede deshacer.") },
+            confirmButton = { Button(onClick = { onClearHistory(); confirmDeleteHistory = false }) { Text("Borrar") } },
+            dismissButton = { OutlinedButton(onClick = { confirmDeleteHistory = false }) { Text("Cancelar") } }
+        )
+    }
     MaterialTheme(colorScheme = darkColorScheme(primary = Cyan, background = Bg, surface = Panel, onSurface = Color.White, onBackground = Color.White)) {
         Scaffold(containerColor = Bg) { insets ->
             Column(
@@ -312,7 +361,7 @@ private fun LadriaScreen(
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
-                    listOf("Analizar", "Créditos", "Ajustes").forEachIndexed { idx, label ->
+                    listOf("Analizar", "Historial", "Créditos", "Ajustes").forEachIndexed { idx, label ->
                         if (idx == selectedTab) Button(
                             onClick = { selectedTab = idx },
                             modifier = Modifier.weight(1f),
@@ -338,6 +387,22 @@ private fun LadriaScreen(
                                 singleLine = true,
                                 placeholder = { Text("Ej.: Toby") }
                             )
+                            Button(onClick=onSaveDog, enabled=dogName.isNotBlank(), modifier=Modifier.fillMaxWidth()) {
+                                Text("Guardar perfil local", color=Bg)
+                            }
+                            savedDogs.take(8).forEach { dog ->
+                                Row(modifier=Modifier.fillMaxWidth(), verticalAlignment=Alignment.CenterVertically) {
+                                    OutlinedButton(onClick={ onPickDog(dog) }, modifier=Modifier.weight(1f)) {
+                                        Text(dog, color=Cyan)
+                                    }
+                                    OutlinedButton(onClick={ onDeleteDog(dog) }) { Text("Borrar", color=Soft) }
+                                }
+                            }
+                        }
+                        SectionCard("CONTEXTO · INFORMADO POR VOS") {
+                            Text("La situación y la postura las indicás vos; no se detectan automáticamente.",color=Soft,fontSize=12.sp)
+                            ObservationSelector("Situación", ObservationGuide.situations, contextChoice, onContextChoice)
+                            ObservationSelector("Postura", ObservationGuide.postures, postureChoice, onPostureChoice)
                         }
                         SectionCard("01 · ESCUCHA EN VIVO") {
                             Text("Reconocimiento de eventos acústicos", color = Color.White, fontWeight = FontWeight.Medium)
@@ -399,11 +464,43 @@ private fun LadriaScreen(
                                 border = BorderStroke(1.dp, Violet.copy(alpha=0.55f)),
                                 modifier = Modifier.fillMaxWidth()
                             ) { Text("📷  Grabar con la cámara", color = Color(0xFFBCAFFF)) }
-                            if (report != null) VideoResults(report)
+                            if (report != null) {
+                                VideoResults(report)
+                                SectionCard("LECTURA ORIENTATIVA") {
+                                    Text(
+                                        ObservationGuide.build(
+                                            report.dogFrames > 0,
+                                            report.sounds.map { it.label },
+                                            contextChoice,
+                                            postureChoice
+                                        ), color=Soft, fontSize=12.sp
+                                    )
+                                    Text("El contexto y la postura fueron informados manualmente.", color=Cyan, fontSize=11.sp)
+                                }
+                            }
                         }
                         SectionCard("ESTADO DEL ANÁLISIS") { Text(message, color = Soft, fontSize = 13.sp) }
                     }
                     1 -> {
+                        SectionCard("CUADERNO LOCAL") {
+                            Text("Se conservan hasta 60 registros de texto. No se almacenan los videos.",color=Soft,fontSize=13.sp)
+                            if (observationHistory.isEmpty()) Text("Todavía no hay videos analizados.",color=Soft)
+                            observationHistory.take(15).forEach { item ->
+                                HorizontalDivider(color=Cyan.copy(alpha=.15f))
+                                Text(item.dogName.ifBlank { "Perro sin nombre" } + " · " +
+                                    java.text.SimpleDateFormat("dd/MM HH:mm", Locale("es","AR"))
+                                        .format(java.util.Date(item.timestamp)), color=Cyan,fontSize=13.sp)
+                                Text(item.text.take(350),color=Soft,fontSize=12.sp)
+                                OutlinedButton(onClick={onShareObservation(item)}) { Text("Compartir texto",color=Cyan) }
+                            }
+                            if (observationHistory.isNotEmpty()) {
+                                OutlinedButton(onClick={ confirmDeleteHistory=true }, modifier=Modifier.fillMaxWidth()) {
+                                    Text("Borrar historial", color=Color(0xFFFFA1A1))
+                                }
+                            }
+                        }
+                    }
+                    2 -> {
                         SectionCard("CRÉDITOS · PRÓXIMA ETAPA") {
                             Text("Anuncios recompensados, sin falsas recompensas", color=Color.White, fontSize=17.sp, fontWeight=FontWeight.SemiBold)
                             Text("Durante la beta inicial los análisis son gratuitos. No se muestra saldo ficticio ni anuncios de producción.", color=Soft, fontSize=13.sp)
@@ -435,6 +532,10 @@ private fun LadriaScreen(
                                 Text("Abrir versión oficial", color=Cyan)
                             }
                         }
+                        SectionCard("ALMACENAMIENTO PRIVADO") {
+                            Text("Los perfiles y registros permanecen en este teléfono. Desde Historial podés compartirlos o borrarlos.",color=Soft,fontSize=13.sp)
+                            Text("LadrIA no copia los archivos originales a su historial.",color=Soft,fontSize=13.sp)
+                        }
                         SectionCard("PRIVACIDAD Y CÓDIGO ABIERTO") {
                             Text("Los audios y videos se procesan en el celular; la búsqueda de actualizaciones usa internet. La monetización futura utilizará red para anuncios y créditos.", color=Soft, fontSize=13.sp)
                             Text("github.com/maxijones012/LadrIA", color=Cyan, fontSize=13.sp)
@@ -447,6 +548,32 @@ private fun LadriaScreen(
                     color = Soft, fontSize = 11.sp, textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth().padding(bottom = 20.dp)
                 )
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun ObservationSelector(
+    label: String,
+    values: List<String>,
+    selected: String,
+    onSelect: (String) -> Unit
+) {
+    Text(label, color=Color.White,fontSize=13.sp,fontWeight=FontWeight.Medium)
+    androidx.compose.foundation.layout.FlowRow(
+        modifier=Modifier.fillMaxWidth(),
+        horizontalArrangement=Arrangement.spacedBy(6.dp),
+        verticalArrangement=Arrangement.spacedBy(6.dp)
+    ) {
+        values.forEach { value ->
+            OutlinedButton(
+                onClick={onSelect(value)},
+                border=BorderStroke(1.dp, if(selected == value) Cyan else Soft.copy(alpha=.25f)),
+                contentPadding=androidx.compose.foundation.layout.PaddingValues(horizontal=10.dp,vertical=2.dp)
+            ) {
+                Text(value, color=if(selected == value) Cyan else Soft, fontSize=12.sp)
             }
         }
     }
