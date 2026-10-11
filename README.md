@@ -21,7 +21,17 @@ Repositorio oficial: https://github.com/maxijones012/LadrIA
 - No se usa la unidad real de LadrIA; la validación SSV de AdMob está configurada en consola, pero el circuito de usuarios/SSV/billetera sigue pendiente.
 - Pueden existir errores de compilación o diferencias en SDK que deban detectarse en el próximo único build manual; aún no se compiló esta modificación.
 
-## v0.3.0 — última compilación de prueba
+
+## v0.4.0 — cuaderno y contexto
+- Perfiles locales por nombre y selector.
+- Contexto y observaciones corporales manuales, diferenciadas explícitamente de las señales que detecta YAMNet/ML Kit.
+- Lectura conjunta descriptiva que evita diagnosticar emociones, incluso si se observa audio e imagen de perro.
+- Historial local de hasta 60 análisis de video, opción de compartir como texto y borrar registros con confirmación.
+- Eliminación de MP4 temporal grabado por la app tras analizar; videos importados no se borran.
+- Pruebas unitarias obligatorias en el único build de CI.
+- Las etapas 5, 6, 7 y 14 requieren datasets y modelos caninos especializados evaluados independientemente: **NO están científicamente completadas**. Ver [estado de etapas](docs/CIERRE-ETAPAS-0-16.md).
+
+## v0.3.0 — compilación anterior
 
 - Compilación confirmada por GitHub Actions: https://github.com/maxijones012/LadrIA/actions/runs/38168414959
 - Detector consulta todas las clases YAMNet, incluye ladridos agudos, sensibilidad Normal/Sensible, momentos acústicos por segundo y 12 cuadros de video.
@@ -49,5 +59,5 @@ Requisitos locales: JDK 17, Android SDK 35, Gradle 8.10.2. Ejecutar `python3 scr
 
 - **El código es MIT**, pero los modelos y SDKs tienen licencias y condiciones propias. Antes de publicar una versión comercial, completar el inventario de dependencias y permisos de redistribución. Evitar el dataset emocional NC de Barkopedia salvo autorización.
 - La búsqueda de versiones necesita `INTERNET`; la futura publicidad y backend también. Eso NO significa que subamos audio o video. No se graba en segundo plano.
-- El estado actual es **código de prototipo sin APK compilado ni pruebas en Android verificadas en esta sesión**. La cuenta AdMob está registrada y el backend tiene funciones iniciales, pero **no se muestran anuncios reales ni se han probado créditos productivos o el circuito completo**.
+- La v0.3.0 se compiló como APK de prueba; la v0.4.0 requiere compilación y pruebas en dispositivo. La cuenta AdMob está registrada y el backend tiene funciones iniciales, pero **no se muestran anuncios reales ni se han probado créditos productivos o el circuito completo**.
 - El score de YAMNet indica resultado de clasificación acústica, no seguridad, emoción, estado médico o probabilidad de una traducción.

@@ -60,5 +60,6 @@ dependencies {
     // No pedir anuncios reales hasta completar identidad, sesión SSV y pruebas.
     implementation("com.google.android.libraries.ads.mobile.sdk:ads-mobile-sdk:1.5.0")
     implementation("com.google.android.ump:user-messaging-platform:4.0.0")
+    testImplementation("junit:junit:4.13.2")
     debugImplementation("androidx.compose.ui:ui-tooling")
 }
