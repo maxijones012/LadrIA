@@ -32,9 +32,13 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - uses: android-actions/setup-android@v3
-      - name: Instalar SDK
-        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      # ubuntu-latest ya trae Android SDK/cmdline-tools. El setup-android v3
+      # intenta instalar el paquete eliminado 'tools' y falla en 2026.
+      - name: Preparar SDK Android
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          sdkmanager --version
+          sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.10.2'
