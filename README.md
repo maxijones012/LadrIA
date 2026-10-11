@@ -7,9 +7,9 @@ Repositorio oficial: https://github.com/maxijones012/LadrIA
 ## Implementado en el código base (NO verificado en dispositivo aún)
 
 - Interfaz oscura con acentos cian/violeta, pestañas Analizar / Créditos / Ajustes.
-- Clasificación local de eventos sonoros con YAMNet (TensorFlow Lite).
-- Micrófono activo solo cuando el usuario inicia escucha; se detiene al abandonar la pantalla.
-- Selección y captura de video mediante Android, etiquetado de perro en hasta seis cuadros e inferencia acústica del tramo inicial de hasta 30 segundos.
+- Clasificación local de eventos sonoros con YAMNet (TensorFlow Lite). La v0.3 analiza todas las categorías y no solo las 12 primeras, añade Yip y evita Whimper humano.
+- Micrófono activo solo cuando el usuario inicia escucha; se detiene al abandonar la pantalla. Sensibilidad Normal/Sensible y últimos eventos con segundos relativos.
+- Selección y captura de video mediante Android, etiquetado de perro en hasta doce cuadros e inferencia acústica del tramo inicial de hasta 30 segundos, con eventos por segundo.
 - Búsqueda voluntaria de actualizaciones oficiales en GitHub Releases, con apertura de publicación cuando existe versión más nueva.
 - Workflow **manual** de GitHub Actions con modos `test` (APK debug) y `release` (APK firmado con clave estable + publicación). Sin compilación automática por commits.
 - Se informa cuando la evidencia es insuficiente. Nada se envía al servidor para su análisis.

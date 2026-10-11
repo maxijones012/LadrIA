@@ -69,6 +69,9 @@ class MainActivity : ComponentActivity() {
     private var isActive by mutableStateOf(false)
     private var isBusy by mutableStateOf(false)
     private var micFindings by mutableStateOf<List<SoundFinding>>(emptyList())
+    private var micHistory by mutableStateOf<List<SoundMoment>>(emptyList())
+    private var startedListeningMs: Long = 0L
+    private var sensitivity by mutableStateOf(DetectionSensitivity.NORMAL)
     private var videoReport by mutableStateOf<VideoReport?>(null)
     private var message by mutableStateOf("Grabá o importá un video. El análisis se realiza en tu teléfono.")
     private var lastDogName by mutableStateOf("")
@@ -93,6 +96,13 @@ class MainActivity : ComponentActivity() {
                 active = isActive,
                 busy = isBusy,
                 audio = micFindings,
+                history = micHistory,
+                sensitivity = sensitivity,
+                onSensitivityChange = { selected ->
+                    if (isActive) stopMic()
+                    sensitivity = selected
+                    message = "Sensibilidad actualizada. Tocá Comenzar escucha para aplicarla."
+                },
                 report = videoReport,
                 message = message,
                 dogName = lastDogName,
@@ -144,7 +154,7 @@ class MainActivity : ComponentActivity() {
         message = "Analizando cuadros y audio. Esto puede demorar unos segundos..."
         worker.execute {
             try {
-                val report = VideoEngine.analyze(this, uri)
+                val report = VideoEngine.analyze(this, uri, sensitivity)
                 runOnUiThread {
                     videoReport = report
                     message = "Análisis finalizado. Interpretá los resultados junto al contexto."
@@ -197,10 +207,25 @@ class MainActivity : ComponentActivity() {
         if (isBusy || isActive) return
         isActive = true
         micFindings = emptyList()
+        micHistory = emptyList()
+        startedListeningMs = android.os.SystemClock.elapsedRealtime()
         message = "Escuchando... Mostramos eventos acústicos, no emociones verificadas."
         engine = LiveMicEngine(
             this,
-            onResult = { result -> runOnUiThread { if (isActive) micFindings = result } },
+            sensitivity = sensitivity,
+            onResult = { result -> runOnUiThread {
+                if (isActive) {
+                    micFindings = result
+                    val strongest = result.firstOrNull()
+                    if (strongest != null) {
+                        val second = ((android.os.SystemClock.elapsedRealtime() - startedListeningMs) / 1000L).toInt()
+                        val latest = micHistory.lastOrNull()
+                        if (latest == null || latest.finding.label != strongest.label || second - latest.second >= 3) {
+                            micHistory = (micHistory + SoundMoment(second, strongest)).takeLast(18)
+                        }
+                    }
+                }
+            } },
             onError = { error -> runOnUiThread { message = error; stopMic() } }
         ).also { it.start() }
     }
@@ -229,6 +254,9 @@ private fun LadriaScreen(
     active: Boolean,
     busy: Boolean,
     audio: List<SoundFinding>,
+    history: List<SoundMoment>,
+    sensitivity: DetectionSensitivity,
+    onSensitivityChange: (DetectionSensitivity) -> Unit,
     report: VideoReport?,
     message: String,
     dogName: String,
@@ -313,7 +341,33 @@ private fun LadriaScreen(
                         }
                         SectionCard("01 · ESCUCHA EN VIVO") {
                             Text("Reconocimiento de eventos acústicos", color = Color.White, fontWeight = FontWeight.Medium)
-                            Text("Ladridos, aullidos, gruñidos y gemidos cuando el modelo logra identificarlos.", color = Soft, fontSize = 13.sp)
+                            Text("Ladridos, ladridos agudos, aullidos, gruñidos y gemidos. El detector puede equivocarse.", color = Soft, fontSize = 13.sp)
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                DetectionSensitivity.entries.forEach { option ->
+                                    val selected = sensitivity == option
+                                    if (selected) Button(
+                                        onClick = { onSensitivityChange(option) },
+                                        enabled = !active,
+                                        modifier = Modifier.weight(1f),
+                                        colors = ButtonDefaults.buttonColors(containerColor = Cyan)
+                                    ) {
+                                        Text(if (option == DetectionSensitivity.NORMAL) "Normal" else "Sensible", color = Bg, fontSize = 12.sp)
+                                    } else OutlinedButton(
+                                        onClick = { onSensitivityChange(option) },
+                                        enabled = !active,
+                                        modifier = Modifier.weight(1f),
+                                        border = BorderStroke(1.dp, Violet.copy(alpha = 0.65f))
+                                    ) {
+                                        Text(if (option == DetectionSensitivity.NORMAL) "Normal" else "Sensible", color = Soft, fontSize = 12.sp)
+                                    }
+                                }
+                            }
+                            Text(
+                                if (sensitivity == DetectionSensitivity.SENSITIVE)
+                                    "Modo sensible: encuentra sonidos más suaves, pero puede confundirse con ruido."
+                                else "Modo normal: reduce algunas falsas alarmas. Si no detecta, probá Sensible.",
+                                color = Soft, fontSize = 12.sp
+                            )
                             Button(
                                 onClick = onToggleMic,
                                 enabled = !busy,
@@ -324,10 +378,16 @@ private fun LadriaScreen(
                                 Text("● Micrófono activo", color = Cyan, fontSize = 12.sp)
                                 SoundResults(audio, isListening = true)
                             }
+                            if (history.isNotEmpty()) {
+                                Text("SEÑALES RECIENTES", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                history.takeLast(6).asReversed().forEach { moment ->
+                                    Text("${moment.second}s · ${moment.finding.label}", color = Soft, fontSize = 12.sp)
+                                }
+                            }
                         }
                         SectionCard("02 · ANÁLISIS DE VIDEO") {
                             Text("Audio + imagen", color = Color.White, fontWeight = FontWeight.Medium)
-                            Text("Analiza seis cuadros del primer tramo y hasta 30 segundos de audio. No detecta postura en esta versión.", color = Soft, fontSize = 13.sp)
+                            Text("Revisa hasta 12 cuadros y 30 segundos de audio por intervalos. No detecta postura ni emociones todavía.", color = Soft, fontSize = 13.sp)
                             OutlinedButton(
                                 onClick = { picker.launch(arrayOf("video/*")) },
                                 enabled = !busy && !active,
@@ -437,13 +497,28 @@ private fun VideoResults(report: VideoReport) {
             "Perro reconocido en ${report.dogFrames} de ${report.framesChecked} cuadros examinados.",
             color = Color.White, fontSize = 14.sp
         )
-        Text("No se infiere postura ni emoción automáticamente en esta versión.", color = Soft, fontSize = 12.sp)
+        Text("Se revisó un tramo de hasta ${report.visualSecondsInspected}s. No se infieren posturas ni emociones.", color = Soft, fontSize = 12.sp)
     }
     HorizontalDivider(color = Cyan.copy(alpha = 0.20f))
     Text("RESULTADO ACÚSTICO", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     if (!report.audioAvailable) {
         Text("Audio sin procesar: ${report.audioError ?: "sin pista decodificable"}", color = Soft, fontSize = 12.sp)
-    } else SoundResults(report.sounds)
+    } else {
+        SoundResults(report.sounds)
+        Text("Se procesaron ${report.audioSecondsInspected} segundos de audio.", color = Soft, fontSize = 12.sp)
+        if (report.moments.isNotEmpty()) {
+            Text("MOMENTOS DESTACADOS", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            report.moments.take(12).forEach { moment ->
+                Text("${moment.second}s · ${moment.finding.label} · señal ${String.format(Locale.US, "%.0f", moment.finding.score * 100)}",
+                    color = Color.White, fontSize = 12.sp)
+            }
+            if (report.moments.size > 12) Text("Y ${report.moments.size - 12} intervalos más...", color = Soft, fontSize = 12.sp)
+            val barkTimes = report.moments.filter { it.finding.label.startsWith("Ladrido") }.map { it.second }
+            if (barkTimes.size >= 3 && barkTimes.last() - barkTimes.first() >= 3) {
+                Text("Patrón observado: ladridos detectados en varios segundos del tramo.", color = Cyan, fontSize = 12.sp)
+            }
+        }
+    }
     HorizontalDivider(color = Cyan.copy(alpha = 0.20f))
     Text("LECTURA CONJUNTA", color = Cyan, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     Text(

@@ -19,26 +19,33 @@ import kotlin.math.min
 /** Audio event detection, NOT canine-emotion or intent recognition. */
 data class SoundFinding(val label: String, val score: Float)
 
+/** Un umbral bajo recupera más eventos, pero también aumenta falsos positivos. */
+enum class DetectionSensitivity(val minScore: Float) {
+    NORMAL(0.16f),
+    SENSITIVE(0.09f)
+}
+
+data class SoundMoment(val second: Int, val finding: SoundFinding)
+
 object CanineSounds {
-    private val patterns = listOf(
-        "bark" to "Ladridos",
-        "bow-wow" to "Ladridos",
-        "growl" to "Gruñidos",
-        "howl" to "Aullidos",
-        "whimper" to "Gemidos",
-        "whine" to "Gemidos",
-        "dog" to "Sonido de perro"
+    // Etiquetas reales de YAMNet. No confundir "Whimper" genérico (humano)
+    // con "Whimper (dog)" ni asignar intenciones emocionales.
+    private val labels = mapOf(
+        "Bark" to "Ladridos",
+        "Bow-wow" to "Ladridos",
+        "Yip" to "Ladridos agudos",
+        "Howl" to "Aullidos",
+        "Growling" to "Gruñidos",
+        "Whimper (dog)" to "Gemidos",
+        "Dog" to "Sonido de perro"
     )
 
-    /** Scores are classifier outputs, not a probability of the animal's intention. */
-    fun canineOnly(scores: List<SoundFinding>, minScore: Float = 0.20f): List<SoundFinding> =
-        scores.mapNotNull { value ->
-            val translated = patterns.firstOrNull { (token, _) ->
-                value.label.contains(token, ignoreCase = true)
-            }?.second
-            if (translated != null && value.score >= minScore) {
-                SoundFinding(translated, value.score)
-            } else null
+    /** Scores del modelo, NO probabilidades de que un perro sienta algo. */
+    fun canineOnly(scores: List<SoundFinding>, minScore: Float = 0.16f): List<SoundFinding> =
+        scores.mapNotNull { sound ->
+            val name = labels[sound.label.trim()]
+            val threshold = if (name == "Sonido de perro") max(minScore, 0.20f) else minScore
+            if (name != null && sound.score >= threshold) SoundFinding(name, sound.score) else null
         }.groupBy { it.label }
             .map { (label, candidates) -> SoundFinding(label, candidates.maxOf { it.score }) }
             .sortedByDescending { it.score }
@@ -50,7 +57,7 @@ class SoundClassifier(context: Context) : AutoCloseable {
         context,
         "yamnet.tflite",
         AudioClassifier.AudioClassifierOptions.builder()
-            .setMaxResults(12)
+            .setMaxResults(-1) // Buscar entre TODAS las clases; no limitar a las 12 generales.
             .setScoreThreshold(0f)
             .build()
     )
@@ -68,6 +75,7 @@ class SoundClassifier(context: Context) : AutoCloseable {
 
 class LiveMicEngine(
     private val context: Context,
+    private val sensitivity: DetectionSensitivity,
     private val onResult: (List<SoundFinding>) -> Unit,
     private val onError: (String) -> Unit
 ) {
@@ -93,7 +101,7 @@ class LiveMicEngine(
                                 Thread.sleep(650)
                                 if (!running.get()) break
                                 tensor.load(recorder)
-                                onResult(CanineSounds.canineOnly(detector.classify(tensor)))
+                                onResult(CanineSounds.canineOnly(detector.classify(tensor), sensitivity.minScore))
                             }
                         } finally {
                             try { recorder.stop() } catch (_: Exception) { }
