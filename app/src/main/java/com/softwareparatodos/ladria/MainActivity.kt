@@ -80,6 +80,7 @@ class MainActivity : ComponentActivity() {
     private var contextChoice by mutableStateOf("Sin contexto")
     private var postureChoice by mutableStateOf("No observada")
     private var pendingVideo: android.net.Uri? = null
+    private var pendingCameraFile: File? = null
     private var updateMessage by mutableStateOf("Releases oficiales desde GitHub. La instalación requiere tu autorización.")
     private var availableUpdate: AppUpdate? by mutableStateOf(null)
     private var checkingUpdate by mutableStateOf(false)
@@ -152,7 +153,11 @@ class MainActivity : ComponentActivity() {
         val captured = pendingVideo
         pendingVideo = null
         if (success && captured != null) analyzeCaptured(captured)
-        else message = "La grabación de video fue cancelada."
+        else {
+            pendingCameraFile?.delete()
+            pendingCameraFile = null
+            message = "La grabación de video fue cancelada."
+        }
     }
 
     private var analyzeCaptured: (android.net.Uri) -> Unit = {}
@@ -163,6 +168,7 @@ class MainActivity : ComponentActivity() {
             val destination = File.createTempFile("ladria_", ".mp4", cacheDir)
             val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", destination)
             pendingVideo = uri
+            pendingCameraFile = destination
             captureVideo.launch(uri)
         } catch (error: Exception) {
             message = "No se pudo abrir la cámara: ${error.message}"
@@ -193,6 +199,11 @@ class MainActivity : ComponentActivity() {
                     message = "No se pudo analizar el archivo: ${error.message ?: "formato incompatible"}"
                     isBusy = false
                 }
+            } finally {
+                // Solo se borra el archivo temporal de cámara creado por LadrIA.
+                // Nunca borrar el video importado por la persona.
+                pendingCameraFile?.delete()
+                pendingCameraFile = null
             }
         }
     }
